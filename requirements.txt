@@ -1,0 +1,8 @@
+pydantic
+python-json-logger
+Flask
+prometheus-client
+Werkzeug
+gunicorn
+requests
+pytest
