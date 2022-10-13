@@ -2,8 +2,6 @@
 
 All code should be compatible with Python >=3.9.
 
-Create virtual environment and activate it:
-
 Use either virtual environment:
 ```bash
 make initialize-venv
