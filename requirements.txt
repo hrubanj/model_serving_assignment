@@ -6,3 +6,5 @@ Werkzeug
 gunicorn
 requests
 pytest
+black
+isort

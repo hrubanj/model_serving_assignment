@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import pathlib
 
 from common.exceptions import DuplicateItemException
@@ -11,7 +10,6 @@ from common.exceptions import DuplicateItemException
 class FileBasedDAO:
     def __init__(self, data_directory: str) -> None:
         self.directory_path = pathlib.Path(data_directory)
-        os.makedirs(self.directory_path, exist_ok=True)
 
     @staticmethod
     def _hash_dictionary_contents(
@@ -22,7 +20,7 @@ class FileBasedDAO:
 
     def save_scoring_result(
         self, input_dictionary: dict[str, str | float | bool]
-    ) -> None:
+    ) -> pathlib.Path:
         filepath = (
             self.directory_path
             / f"{self._hash_dictionary_contents(input_dictionary)}.json"
@@ -30,7 +28,8 @@ class FileBasedDAO:
         try:
             filepath.touch(exist_ok=False)  # avoid race condition
             # filepath.touch -> if the file does not exist, 'claim' the name
-        except FileExistsError as e:
-            raise DuplicateItemException from e
-        with open(filepath, "wt") as out_file:
+        except FileExistsError as error:
+            raise DuplicateItemException from error
+        with open(filepath, "wt", encoding="utf-8") as out_file:
             json.dump(input_dictionary, out_file)
+        return filepath

@@ -1,3 +1,7 @@
+"""
+This module contains a factory method for setting up logging to stdout in JSON format.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -9,6 +13,9 @@ from common.constants import APPLICATION_NAME
 
 
 def setup_logging(log_level: int = logging.INFO) -> logging.Logger:
+    """
+    Create logger that logs to stdout in JSON format.
+    """
     logger = logging.getLogger(APPLICATION_NAME)
     logger.setLevel(log_level)
     handler = logging.StreamHandler(sys.stdout)

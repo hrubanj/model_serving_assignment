@@ -1,19 +1,29 @@
+"""
+Module that binds API to Flask app, defines its endpoints, and
+adds logging and metrics for endpoint calls.
+"""
+
 from __future__ import annotations
 
 import logging
-import time
 import os
+import time
 
 import flask
-from prometheus_client import generate_latest, Gauge, Counter
+from prometheus_client import Counter, Gauge, generate_latest
 
 from api.model_serving_api import API
 from common.constants import APPLICATION_NAME
 from common.daos.file_based_dao import FileBasedDAO
 from common.log import setup_logging
 
+APPLICATION_VERSION = "1.0"
+
 
 def create_app(config_dictionary: dict[str, str] | None = None) -> flask.Flask:
+    """
+    Setup API and bind it to Flask app, define metrics, and logging.
+    """
     up_metric = Gauge("up", "1 if API is running, 0 otherwise.")
     up_metric.set(0)
 
@@ -35,11 +45,18 @@ def create_app(config_dictionary: dict[str, str] | None = None) -> flask.Flask:
     app = flask.Flask(APPLICATION_NAME)
     app.api_worker = api_worker
 
+    @app.route("/")
+    def index() -> tuple[dict[str, str], int]:
+        return {
+            "application_name": APPLICATION_NAME,
+            "version": APPLICATION_VERSION,
+        }, 200
+
     @app.route("/metrics")
     def show_metrics() -> bytes:
         return generate_latest()
 
-    @app.route("/status", endpoint="status")
+    @app.route("/status")
     def status():
         up_metric.set(1)
         return "OK", 200
@@ -84,7 +101,6 @@ def create_app(config_dictionary: dict[str, str] | None = None) -> flask.Flask:
                 "status_code": response.status_code,
             }
             endpoint_duration_metric.labels(**endpoint_labels).set(duration)
-            print(endpoint_duration_metric)
             endpoint_call_count_metric.labels(**endpoint_labels).inc()
         return response
 
@@ -92,4 +108,8 @@ def create_app(config_dictionary: dict[str, str] | None = None) -> flask.Flask:
 
 
 def create_app_from_environment() -> flask.Flask:
+    """
+    Setup API and bind it to Flask app, define metrics, and logging.
+    Use configuration taken from the environment.
+    """
     return create_app(os.environ.copy())

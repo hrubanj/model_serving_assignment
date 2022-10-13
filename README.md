@@ -1,16 +1,23 @@
 ## Setup environment
 
+All code should be compatible with Python >=3.9.
+
 Create virtual environment and activate it:
 
+Use either virtual environment:
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+make initialize-venv
+```
+Or docker (if you do not have compatible python version):
+```bash
+docker run -it --rm  -p "5000:5000" -v "$(pwd):/tmp" python:3.10-slim-buster /bin/sh
+apt-get update && apt-get install make && cd tmp
 ```
 
 Install requirements:
 
 ```bash
-pip3 install -r requirements.txt
+make install-requirements
 ```
 
 ## Run tests
@@ -18,7 +25,7 @@ pip3 install -r requirements.txt
 Run all tests via:
 
 ```bash
-python3 -m pytest tests/
+make run-tests
 ```
 
 Run specific test file via:
@@ -27,7 +34,23 @@ Run specific test file via:
 python3 -m pytest tests/<directory_name>
 ```
 
-## Run API
+## Run Path Analyzer
+Run analyzer function that does not account for gaps between months.
+(Note that gaps can still be present but this function just returns a minimum and maximum)
+
+Example:
+```python
+from path_analyzer.analyzer import report_min_max_no_gaps
+
+
+report_min_max_no_gaps(
+    "s3://my-bucket", # bucket
+    "xxx/yyy/zzz/def", # full path
+    "/Users/jiri/PycharmProjects/model_serving_assignment/data/min_max_no_gaps.json", # output file
+)
+```
+
+## Run Model Serving API
 
 Set environmental variable for directory where data gets saved.
 For example:
@@ -37,16 +60,36 @@ For example:
 ```
 
 ```bash
-gunicorn --config "webserver/gunicorn_config.py" --log-config "webserver/gunicorn_logging.conf" "api.flask_app:create_app_from_environment()"
+make run-api
 ```
 
 The API is exposed at `http://localhost:5000`.
 
 ## Endpoints
 
-All requests must be in JSON format.
+All POST requests must be in JSON format.
 
-### 1. POST "/label_sentiment"
+### GET "/"
+Status code: 200
+
+Returns application name and version.
+
+### GET "/status"
+Status code: 200
+
+Returns metrics that can be scraped by Prometheus.
+
+### GET "/metrics"
+Status code: 200
+
+Returns metrics that can be scraped by Prometheus.
+
+### GET "/status"
+Status code: 200
+
+Returns "OK" if the application is running.
+
+### POST "/label_sentiment"
 
 #### Request format:
 
@@ -95,7 +138,14 @@ Example:
 
 #### Errors:
 
-**Invalid request:**
+**Invalid request format:**
+
+Status code: 400
+
+If request is not a valid JSON, status code 400 is returned.
+
+
+**Invalid request content:**
 
 Status code: 400
 
@@ -118,7 +168,7 @@ Example:
 }
 ```
 
-### 2. POST "/save_sentiment"
+### POST "/save_sentiment"
 
 #### Request format:
 
@@ -161,7 +211,13 @@ Status code: 201
 
 #### Errors:
 
-**Invalid request:**
+**Invalid request format:**
+
+Status code: 400
+
+If request is not a valid JSON, status code 400 is returned.
+
+**Invalid request content:**
 
 Status code: 400
 

@@ -1,4 +1,6 @@
-data/
+# exclude saved data files, but keep the directory
+data/*
+!data/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
