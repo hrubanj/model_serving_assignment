@@ -8,7 +8,7 @@ install-requirements:
 	pip3 install -r requirements.txt
 
 run-tests:
-	python3 -m pytest tests/
+	PYTHONPATH=. python -m pytest tests/
 
 run-api:
 	gunicorn --config "webserver/gunicorn_config.py" --log-config "webserver/gunicorn_logging.conf" "api.flask_app:create_app_from_environment()"
