@@ -24,8 +24,8 @@ def create_app(config_dictionary: dict[str, str] | None = None) -> flask.Flask:
     """
     Setup API and bind it to Flask app, define metrics, and logging.
     """
-    up_metric = Gauge("up", "1 if API is running, 0 otherwise.")
-    up_metric.set(0)
+    up_metric = Gauge("up", "1 if API is running.")
+    up_metric.set(1)
 
     endpoint_call_count_metric = Counter(
         "endpoint_calls",
