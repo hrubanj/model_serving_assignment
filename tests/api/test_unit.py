@@ -1,10 +1,10 @@
 import datetime
 import json
+import tempfile
 
-import pytest
+from api.model_serving_api import SENTIMENT_KEY, SentimentValue
 
 from .conftest import *
-from common.exceptions import DuplicateItemException
 
 
 class TestFileBasedDAO:
@@ -55,5 +55,97 @@ class TestFileBasedDAO:
 
 
 class TestModelServingAPI:
-    def test_fail(self):
-        assert False
+    @pytest.mark.parametrize(
+        "input_text",
+        [
+            "a",
+            "word",
+            "This is sentence",
+            "fnowenfe",
+        ],
+    )
+    def test_label_sentiment_returns_valid_type(
+        self, api_without_duplicates, input_text
+    ):
+        sentiment = api_without_duplicates._label_sentiment(input_text)
+        assert isinstance(sentiment, SentimentValue)
+
+    @pytest.mark.parametrize(
+        "input_dict",
+        [
+            {"test": "fff"},
+            {"text": "fff"},
+            {"text": "fff", "language_code": "en"},
+        ],
+    )
+    def test_get_sentiment_invalid_data(self, api_without_duplicates, input_dict):
+        _, status_code = api_without_duplicates.get_sentiment(input_dict)
+        assert status_code == 400
+
+    @pytest.mark.parametrize(
+        "input_dict",
+        [
+            {"text": "fff", "languageCode": "en"},
+            {"text": 122333, "languageCode": "EN"},
+            {"text": "This is something!", "languageCode": "CZ"},
+        ],
+    )
+    def test_get_sentiment_valid(self, api_without_duplicates, input_dict):
+        response, status_code = api_without_duplicates.get_sentiment(input_dict)
+        assert status_code == 200
+        assert isinstance(response[SENTIMENT_KEY], SentimentValue)
+
+    @pytest.mark.parametrize(
+        "input_dict",
+        [
+            {"text": "fafaf", "languageCode": "en", "sentiment": "positive"},
+            {"sentiment": "positive"},
+            {
+                "text": "fafaf",
+                "languageCode": "en",
+                "sentiment": "weird",
+                "isGoodTranslation": True,
+            },
+        ],
+    )
+    def test_save_sentiment_invalid_data(self, api_without_duplicates, input_dict):
+        _, status_code = api_without_duplicates.save_sentiment(input_dict)
+        assert status_code == 400
+
+    def test_save_sentiment_duplicate(self, api_with_duplicates):
+        _, status_code = api_with_duplicates.save_sentiment(
+            {
+                "text": "aaa",
+                "languageCode": "en",
+                "sentiment": "positive",
+                "isGoodTranslation": True,
+            }
+        )
+        assert status_code == 409
+
+    @pytest.mark.parametrize(
+        "input_dict",
+        [
+            {
+                "text": "fafaf",
+                "languageCode": "en",
+                "sentiment": "positive",
+                "isGoodTranslation": True,
+            },
+            {
+                "text": "fafaf",
+                "languageCode": "en",
+                "sentiment": "positive",
+                "isGoodTranslation": False,
+            },
+            {
+                "text": "",
+                "languageCode": "EN",
+                "sentiment": "neutral",
+                "isGoodTranslation": True,
+            },
+        ],
+    )
+    def test_save_sentiment_valid(self, api_without_duplicates, input_dict):
+        _, status_code = api_without_duplicates.save_sentiment(input_dict)
+        assert status_code == 201

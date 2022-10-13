@@ -1,8 +1,6 @@
 import datetime
 import time
 
-import pytest
-
 from path_analyzer.analyzer import (
     MAXIMUM_MONTH_KEY,
     MINIMUM_MONTH_KEY,
@@ -13,6 +11,8 @@ from path_analyzer.analyzer import (
     serialize_date,
     update_min_max,
 )
+
+from .conftest import *
 
 
 @pytest.mark.parametrize(

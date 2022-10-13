@@ -18,6 +18,6 @@ format:
 	black .
 
 lint:
-	pylint --recursive=y . --ignore-patterns=venv,gunicorn.* --extension-pkg-whitelist='pydantic'
+	pylint --recursive=y . --ignore-patterns=venv,gunicorn.*,tests.* --extension-pkg-whitelist='pydantic'
 
 
